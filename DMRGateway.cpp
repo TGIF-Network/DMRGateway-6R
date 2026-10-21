@@ -112,6 +112,7 @@ static void sigHandler(int signum)
 }
 #endif
 
+const char* HEADER0 = "======================================================";
 const char* HEADER1 = "This software is licenced under the GPL v2 and is primarily";
 const char* HEADER2 = "intended for amateur and educational use.";
 const char* HEADER3 = "Created by Jonathan Naylor, G4KLX and others";
@@ -502,6 +503,7 @@ int CDMRGateway::run()
 	m_network6Enabled = m_conf.getDMRNetwork6Enabled();
 	m_networkXlxEnabled = m_conf.getXLXNetworkEnabled();
 
+	LogInfo(HEADER0);
 	LogInfo(HEADER1);
 	LogInfo(HEADER2);
 	LogInfo(HEADER3);
@@ -914,7 +916,7 @@ int CDMRGateway::run()
 
 
 				// 7 Digit Mode
-				if ( GWMode == 7 && dstId > 999999){
+				if ( GWMode == 7 && dstId > 999999 && dstId <= 9999999){
                             
                                         	ClearNetworks();
                                         	ClearRFNets();
@@ -925,7 +927,7 @@ int CDMRGateway::run()
                                         	if (trace) LogInfo("Selected 7x Network = %d",selnet);
                                         	locknet = selnet;
                                                 if ( trace && ok2tx ) LogInfo("Network Locked = %d",selnet);
-						if (RawNet >= 1 && dstId < 99999999)
+						if (RawNet >= 1 && dstId < 9999999)
 						{
 							GWMode=2;
 							selnet=RawNet;						
