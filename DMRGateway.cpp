@@ -958,7 +958,7 @@ int CDMRGateway::run()
 				}
 
 //				if (RawNet >= 1 && RawNet == selnet && dstId < 99999999)
-				if ( dstId <= 999999 && RawNet >=1 && RawNet <= 6  && selnet != 7)
+				if ( dstId <= 999999 && RawNet >=1 && RawNet <= 6)
 					{
                                                 ClearNetworks();
                                                 ClearRFNets();
