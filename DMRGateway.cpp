@@ -99,7 +99,7 @@ int Reload();
 void SetUserMMDVM();
 void SetUserRoot();
 
- unsigned short int GWMode = 8; 
+ unsigned short int GWMode = 0; 
 
 static bool m_killed = false;
 static int  m_signal = 0;
@@ -878,97 +878,105 @@ int CDMRGateway::run()
 
 				bool trace = false;
 		//		if (ruleTrace && (srcId != rfSrcId[slotNo] || dstId != rfDstId[slotNo])) {
+				
 				if (srcId != rfSrcId[slotNo] || dstId != rfDstId[slotNo]) {
 					rfSrcId[slotNo] = srcId;
 					rfDstId[slotNo] = dstId;
 					trace = true;
 					LogDebug("Rule Trace, RF transmission: Slot=%u Src=%u Dst=%s%u", slotNo, srcId, flco == FLCO_GROUP ? "TG" : "", dstId);
 					LogInfo("Rule Trace, RF transmission: Slot=%u Src=%u Dst=%s%u", slotNo, srcId, flco == FLCO_GROUP ? "TG" : "", dstId);
-					if (m_xlxVoice != NULL)
-						m_xlxVoice->linkedTo(srcId, slotNo);
-
+				//	if (m_xlxVoice != NULL) m_xlxVoice->linkedTo(srcId, slotNo);
 				}
+
+
 
 
 				PROCESS_RESULT result = RESULT_UNMATCHED;
 
-				ok2tx = true;
+				ok2tx = false;
+
 
                                 if ( dstId == 9000 ) {
                                         storedtg = dstId;
                                         ok2tx=false;
                                         selnet=0;
                                         locknet=0;
-					GWMode=0;
-                                }
+                               }
 
 				if ( dstId >= 9001 && dstId <= 9006){
                                                 ClearNetworks();
                                                 ClearRFNets();
                                                 storedtg = dstId;
-                                                if ( trace && ok2tx ) LogInfo("TESTAA Network keyed: %d", dstId);
+                                                if ( trace ) LogInfo("TESTAA Network keyed: %d", dstId);
                                                 selnet = dstId-9000;
-                                                if (trace && ok2tx) LogInfo("Selected 900x Network = %d",selnet);
+                                                if (trace) LogInfo("Selected 900x Network = %d",selnet);
                                                 locknet = selnet;
-                                                if ( trace && ok2tx ) LogInfo("Network Locked = %d",selnet);
+                                                if ( trace ) LogInfo("Network Locked Basic Mode = %d",selnet);
                                                 ok2tx=false;
                                 }
 
-
-				// 7 Digit Mode
-				if ( GWMode == 7 && dstId > 999999 && dstId <= 9999999){
-                            
+//				7 Digit Mode - Raw
+				if ( dstId <= 999999 ) {
+					if ( RawNet != 0 ) {
+						selnet = RawNet; 
+					
+                                        	if ( trace ) LogInfo("7 Digit Mode Selected");
+                                        	if ( trace ) LogInfo("GW Mode = %d",GWMode);
+                                                ClearNetworks();
+                                                ClearRFNets();
+						selnet=RawNet;
+						locknet=RawNet;
+						ok2tx=true;
+                                                if ( trace ) LogInfo("Network Locked Raw Mode = %d",selnet);
+	                                       	if ( trace ) LogInfo("Switching to Net %d - Basic Mode",selnet);						
+					}
+				}
+//				7 Digit Mode - Normal
+				if ( dstId >= 1000001 && dstId < 6177777 ){
                                         	ClearNetworks();
                                         	ClearRFNets();
                                         	if ( trace ) LogInfo("Radio TG Keyed = %d",dstId);
                                         	selnet = ( dstId / 1000000 );
-                                        	if (trace ) LogInfo("Calculated Network = %d",selnet);
+                                        	if ( trace ) LogInfo("Calculated Network 7x = %d",selnet);
                                   //      	LogDebug("Calculated TG = %d",dstId);
-                                        	if (trace) LogInfo("Selected 7x Network = %d",selnet);
+                                        	if ( trace ) LogInfo("Selected 7x Network = %d",selnet);
                                         	locknet = selnet;
-                                                if ( trace && ok2tx ) LogInfo("Network Locked = %d",selnet);
-						if (RawNet >= 1 && dstId < 9999999)
-						{
-							GWMode=2;
-							selnet=RawNet;						
-						}				
+                                                if ( trace ) LogInfo("Network Locked 7x= %d",selnet);
                                         	ok2tx=true;
                                 }
+
+			
+
 				// 8 Dgit Mode				
-				if ( dstId > 9999999 ){
+				if ( dstId > 11000001 ) { 
+                                        	selnet = ( dstId / 1000000  );
+                                        	selnet = selnet - 10;
+	                                       	if ( trace ) LogInfo("Calculated Network 8x = %d",selnet);
+						
+                                        	if ( trace ) LogInfo("8 Digit Mode Selected");
+
                                         	ClearNetworks();
                                         	ClearRFNets();
                                         	if ( trace ) LogInfo("Radio TG Keyed = %d",dstId);
-                                        	selnet = ( dstId / 1000000 );
-                                        	selnet = selnet - 10;
-                                        	if (trace ) LogInfo("Calculated Network = %d",selnet);
                                   //      	LogDebug("Calculated TG = %d",dstId);
                                         	if (trace) LogInfo("Selected 8x Network = %d",selnet);
                                         	locknet = selnet;
                                         	ok2tx=true;
-                                                if ( trace ) LogInfo("Network Locked = %d",selnet);
+                                                if ( trace ) LogInfo("Network Locked 8x= %d",selnet);
 			
 
-						if (RawNet >= 1 && RawNet == selnet && dstId < 99999999)
-						{
-							GWMode=2;
-	                                        	if (trace) LogInfo("Switching to Raw Mode for Net %d",selnet);
-                                                	if ( trace && ok2tx ) LogInfo("Network Locked = %d",selnet);
-						}				
+	//					if (RawNet >= 1 && RawNet == selnet && dstId < 99999999)
+	//					{
+	  //                                      	if (trace) LogInfo("Switching to Raw Mode for Net %d",selnet);
+            //                                    	if ( trace && ok2tx ) LogInfo("Network Locked = %d",selnet);
+	//					}				
+
+
 				}
+						if ( trace ) LogInfo("End of Switching Logic");
+						if ( trace ) LogInfo("Selnet = %d",selnet);
+						if ( trace ) LogInfo("locknet = %d",locknet);
 
-//				if (RawNet >= 1 && RawNet == selnet && dstId < 99999999)
-				if ( dstId <= 999999 && RawNet >=1 && RawNet <= 6)
-					{
-                                                ClearNetworks();
-                                                ClearRFNets();
-						GWMode=2;
-						selnet=RawNet;
-						ok2tx=true;
-                                                if ( trace && ok2tx ) LogInfo("Network Locked = %d",selnet);
-
-						
-					}				
 
                                	if ( dstId >= 9000 && dstId <= 9009 ) ok2tx = false;
 
@@ -1067,6 +1075,7 @@ int CDMRGateway::run()
 	if ( trace ) LogInfo("XLX Mode Selected  Selnet = %d", selnet );
 
 }
+
 				if (m_network1Enabled && (m_dmrNetwork1 != NULL) && rf1ok && ok2tx) {
 					// Rewrite the slot and/or TG or neither
 					for (std::vector<CRewrite*>::iterator it = m_dmr1RFRewrites.begin(); it != m_dmr1RFRewrites.end(); ++it) {

@@ -533,7 +533,7 @@ fi
 Menu
 echo -e '\e[1;40m'
 
-#dmrgateway.service restart ; mmdvmhost.service restart
+dmrgateway.service restart 
 
 sleep 3
 #	sudo reboot
